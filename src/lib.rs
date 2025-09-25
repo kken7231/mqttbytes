@@ -25,6 +25,7 @@ pub enum Error {
     InvalidRetainForwardRule(u8),
     InvalidQoS(u8),
     InvalidSubscribeReasonCode(u8),
+    InvalidPreconnectPayloadType(u8),
     PacketIdZero,
     SubscriptionIdZero,
     PayloadSizeIncorrect,
@@ -60,6 +61,7 @@ pub enum PacketType {
     PingReq,
     PingResp,
     Disconnect,
+    ReservedF,
 }
 
 /// Protocol type
@@ -130,6 +132,7 @@ impl FixedHeader {
             12 => Ok(PacketType::PingReq),
             13 => Ok(PacketType::PingResp),
             14 => Ok(PacketType::Disconnect),
+            15 => Ok(PacketType::ReservedF),
             _ => Err(Error::InvalidPacketType(num)),
         }
     }

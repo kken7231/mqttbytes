@@ -1,5 +1,6 @@
 use crate::*;
 
+mod auth;
 mod connack;
 mod connect;
 mod disconnect;
@@ -14,6 +15,7 @@ mod subscribe;
 mod unsuback;
 mod unsubscribe;
 
+use crate::v5::auth::Auth;
 pub use connack::*;
 pub use connect::*;
 pub use disconnect::*;
@@ -45,6 +47,7 @@ pub enum Packet {
     PingReq,
     PingResp,
     Disconnect(Disconnect),
+    Auth(Auth),
 }
 
 #[repr(u8)]
@@ -147,6 +150,7 @@ pub fn read(stream: &mut BytesMut, max_size: usize) -> Result<Packet, Error> {
         PacketType::PingReq => Packet::PingReq,
         PacketType::PingResp => Packet::PingResp,
         PacketType::Disconnect => Packet::Disconnect(Disconnect::read(fixed_header, packet)?),
+        PacketType::ReservedF => Packet::Auth(Auth::read(fixed_header, packet)?),
     };
 
     Ok(packet)

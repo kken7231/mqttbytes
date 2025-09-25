@@ -13,6 +13,7 @@ mod suback;
 mod subscribe;
 mod unsuback;
 mod unsubscribe;
+mod preconnect;
 
 pub use connack::*;
 pub use connect::*;
@@ -27,6 +28,7 @@ pub use suback::*;
 pub use subscribe::*;
 pub use unsuback::*;
 pub use unsubscribe::*;
+pub use preconnect::*;
 
 /// Encapsulates all MQTT packet types
 #[derive(Debug, Clone, PartialEq)]
@@ -45,6 +47,7 @@ pub enum Packet {
     PingReq,
     PingResp,
     Disconnect,
+    PreConnect(PreConnect),
 }
 
 /// Reads a stream of bytes and extracts next MQTT packet out of it
@@ -81,6 +84,7 @@ pub fn read(stream: &mut BytesMut, max_size: usize) -> Result<Packet, Error> {
         PacketType::PingReq => Packet::PingReq,
         PacketType::PingResp => Packet::PingResp,
         PacketType::Disconnect => Packet::Disconnect,
+        PacketType::ReservedF => Packet::PreConnect(PreConnect::read(fixed_header, packet)?),
     };
 
     Ok(packet)
