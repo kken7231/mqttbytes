@@ -33,9 +33,20 @@ impl Connect {
     }
 
     pub fn set_login<U: Into<String>, P: Into<String>>(&mut self, u: U, p: P) -> &mut Connect {
+        let p = p.into();
         let login = Login {
             username: u.into(),
-            password: p.into(),
+            password: Bytes::copy_from_slice(p.as_bytes()),
+        };
+
+        self.login = Some(login);
+        self
+    }
+
+    pub fn set_login_bytes<U: Into<String>>(&mut self, u: U, p: Bytes) -> &mut Connect {
+        let login = Login {
+            username: u.into(),
+            password: p,
         };
 
         self.login = Some(login);
@@ -205,14 +216,22 @@ impl LastWill {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Login {
     pub username: String,
-    pub password: String,
+    pub password: Bytes, // binary per spec
 }
 
 impl Login {
     pub fn new<U: Into<String>, P: Into<String>>(u: U, p: P) -> Login {
+        let p = p.into();
         Login {
             username: u.into(),
-            password: p.into(),
+            password: Bytes::copy_from_slice(p.as_bytes()),
+        }
+    }
+
+    pub fn new_bytes<U: Into<String>>(u: U, p: Bytes) -> Login {
+        Login {
+            username: u.into(),
+            password: p,
         }
     }
 
@@ -223,8 +242,8 @@ impl Login {
         };
 
         let password = match connect_flags & 0b0100_0000 {
-            0 => String::new(),
-            _ => read_mqtt_string(&mut bytes)?,
+            0 => Bytes::new(),
+            _ => read_mqtt_bytes(&mut bytes)?,
         };
 
         if username.is_empty() && password.is_empty() {
@@ -257,13 +276,13 @@ impl Login {
 
         if !self.password.is_empty() {
             connect_flags |= 0x40;
-            write_mqtt_string(buffer, &self.password);
+            write_mqtt_bytes(buffer, &self.password);
         }
 
         connect_flags
     }
 
-    pub fn validate(&self, username: &String, password: &String ) -> bool {
+    pub fn validate(&self, username: &String, password: &String) -> bool {
         (self.username == *username) && (self.password == *password)
     }
 }
